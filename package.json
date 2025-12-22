@@ -1,0 +1,9 @@
+{
+  "name": "portfolio-website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd react-app && npm install && npm run build"
+  }
+}
+
