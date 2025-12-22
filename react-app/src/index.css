@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Custom styles */
+html, body {
+  background-color: transparent;
+  cursor: none;
+  min-height: 100vh;
+}
+/* Hide scrollbar */
+::-webkit-scrollbar { width: 0px; background: transparent; }
+.glass-panel {
+  background: rgba(9, 9, 11, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+/* Custom selection color */
+::selection { background: #ffffff; color: #000000; }

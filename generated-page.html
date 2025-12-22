@@ -1,0 +1,548 @@
+<html lang="en" class="scroll-smooth no-scrollbar"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeremy Nyende — AI Engineer</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@300;400;500&amp;display=swap" rel="stylesheet">
+    
+    <!-- Core Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin=""></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin=""></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Motion & 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        zinc: {
+                            850: '#1f1f22',
+                            900: '#18181b',
+                            925: '#101012',
+                            950: '#09090b', 
+                        }
+                    },
+                    letterSpacing: {
+                        tighter: '-0.05em',
+                        tight: '-0.03em',
+                    },
+                    cursor: {
+                        none: 'none',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { cursor: none; }
+        /* Hide scrollbar */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .glass-panel {
+            background: rgba(9, 9, 11, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Custom selection color */
+        ::selection { background: #ffffff; color: #000000; }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden bg-zinc-950 text-zinc-300">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- 1. Custom Cursor ---
+        const CustomCursor = () => {
+            const cursorRef = useRef(null);
+            const followerRef = useRef(null);
+
+            useEffect(() => {
+                const moveCursor = (e) => {
+                    gsap.to(cursorRef.current, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                    gsap.to(followerRef.current, { x: e.clientX, y: e.clientY, duration: 0.4, ease: "power2.out" });
+                };
+
+                const handleHoverStart = () => {
+                    gsap.to(followerRef.current, { scale: 3, backgroundColor: "rgba(255,255,255,0.15)", mixBlendMode: "screen", duration: 0.3 });
+                    gsap.to(cursorRef.current, { scale: 0, duration: 0.3 });
+                };
+                
+                const handleHoverEnd = () => {
+                    gsap.to(followerRef.current, { scale: 1, backgroundColor: "transparent", mixBlendMode: "normal", duration: 0.3 });
+                    gsap.to(cursorRef.current, { scale: 1, duration: 0.3 });
+                };
+
+                window.addEventListener('mousemove', moveCursor);
+                
+                // Add event listeners to dynamically added elements
+                const updateListeners = () => {
+                    const interactives = document.querySelectorAll('a, button, .interactive');
+                    interactives.forEach(el => {
+                        el.addEventListener('mouseenter', handleHoverStart);
+                        el.addEventListener('mouseleave', handleHoverEnd);
+                    });
+                };
+
+                updateListeners();
+                // Re-bind occasionally for dynamic content
+                const interval = setInterval(updateListeners, 1000);
+
+                return () => {
+                    window.removeEventListener('mousemove', moveCursor);
+                    clearInterval(interval);
+                };
+            }, []);
+
+            return (
+                <>
+                    <div ref={cursorRef} className="fixed top-0 left-0 w-1.5 h-1.5 bg-white rounded-full pointer-events-none z-[100] -translate-x-1/2 -translate-y-1/2 mix-blend-difference"></div>
+                    <div ref={followerRef} className="fixed top-0 left-0 w-6 h-6 border border-white/30 rounded-full pointer-events-none z-[99] -translate-x-1/2 -translate-y-1/2 transition-colors"></div>
+                </>
+            );
+        };
+
+        // --- 2. 3D Data Particle Scene ---
+        const Scene = () => {
+            const mountRef = useRef(null);
+
+            useEffect(() => {
+                const scene = new THREE.Scene();
+                scene.fog = new THREE.FogExp2(0x09090b, 0.04);
+
+                const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+                camera.position.z = 6;
+
+                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                mountRef.current.appendChild(renderer.domElement);
+
+                const geometry = new THREE.BufferGeometry();
+                const count = 1500;
+                const posArray = new Float32Array(count * 3);
+                
+                for(let i = 0; i < count * 3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 8;
+                }
+
+                geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                
+                const material = new THREE.PointsMaterial({
+                    size: 0.015,
+                    color: 0xe4e4e7,
+                    transparent: true,
+                    opacity: 0.6,
+                    blending: THREE.AdditiveBlending
+                });
+
+                const particlesMesh = new THREE.Points(geometry, material);
+                scene.add(particlesMesh);
+
+                const lineGeo = new THREE.IcosahedronGeometry(2, 1);
+                const lineMat = new THREE.MeshBasicMaterial({ 
+                    color: 0x52525b,
+                    wireframe: true, 
+                    transparent: true, 
+                    opacity: 0.08 
+                });
+                const lineMesh = new THREE.Mesh(lineGeo, lineMat);
+                scene.add(lineMesh);
+
+                let mouseX = 0;
+                let mouseY = 0;
+                let targetX = 0;
+                let targetY = 0;
+
+                const windowHalfX = window.innerWidth / 2;
+                const windowHalfY = window.innerHeight / 2;
+
+                const handleMouseMove = (event) => {
+                    mouseX = (event.clientX - windowHalfX);
+                    mouseY = (event.clientY - windowHalfY);
+                };
+                window.addEventListener('mousemove', handleMouseMove);
+
+                const animate = () => {
+                    targetX = mouseX * 0.0001;
+                    targetY = mouseY * 0.0001;
+                    particlesMesh.rotation.y += 0.002;
+                    particlesMesh.rotation.x += 0.001;
+                    particlesMesh.rotation.y += 0.25 * (targetX - particlesMesh.rotation.y);
+                    particlesMesh.rotation.x += 0.25 * (targetY - particlesMesh.rotation.x);
+                    lineMesh.rotation.y -= 0.001;
+                    lineMesh.rotation.x -= 0.001;
+                    renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
+                };
+                animate();
+
+                const handleResize = () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                };
+                window.addEventListener('resize', handleResize);
+
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    window.removeEventListener('mousemove', handleMouseMove);
+                    if(mountRef.current) mountRef.current.removeChild(renderer.domElement);
+                };
+            }, []);
+
+            return <div ref={mountRef} className="fixed top-0 left-0 w-full h-screen -z-10" />;
+        };
+
+        // --- 3. Header ---
+        const Header = () => {
+            const [isScrolled, setIsScrolled] = useState(false);
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    setIsScrolled(window.scrollY > 50);
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const navLinks = [
+                { name: 'Projects', href: '#projects' },
+                { name: 'About', href: '#about' },
+                { name: 'Stack', href: '#stack' },
+                { name: 'Contact', href: '#contact' }
+            ];
+
+            return (
+                <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'pt-2' : 'pt-6'}`}>
+                    <div className={`max-w-7xl mx-auto px-6 transition-all duration-500`}>
+                        <nav className={`flex items-center justify-between rounded-full px-6 py-3 transition-all duration-300 ${isScrolled ? 'glass-panel' : 'border border-transparent'}`}>
+                            
+                            <a href="#" className="interactive inline-flex items-center gap-2 group">
+                                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black">
+                                    <span className="font-bold text-xs tracking-tighter">JN</span>
+                                </div>
+                                <span className="text-sm font-medium tracking-tight text-white group-hover:text-zinc-300 transition-colors">Jeremy Nyende</span>
+                            </a>
+
+                            <div className="hidden md:flex items-center gap-8">
+                                {navLinks.map((link) => (
+                                    <a key={link.name} href={link.href} className="interactive text-xs font-medium text-zinc-400 hover:text-white tracking-tight transition-colors uppercase">
+                                        {link.name}
+                                    </a>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <a href="#" className="interactive hidden sm:inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-tight text-zinc-950 bg-white hover:bg-zinc-200 transition-colors border border-transparent">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+                                    <span>Resume</span>
+                                </a>
+                                
+                                <button 
+                                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                    className="interactive md:hidden inline-flex items-center justify-center rounded-full w-9 h-9 border border-zinc-800 bg-zinc-900 text-white hover:bg-zinc-800 transition-colors"
+                                >
+                                    {isMobileMenuOpen ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h16"/><path d="M4 18h16"/><path d="M4 6h16"/></svg>
+                                    )}
+                                </button>
+                            </div>
+                        </nav>
+
+                        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-64 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                            <div className="glass-panel rounded-2xl p-4 grid gap-1">
+                                {navLinks.map((link) => (
+                                    <a key={link.name} href={link.href} className="block px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors">
+                                        {link.name}
+                                    </a>
+                                ))}
+                                <div className="border-t border-zinc-800 mt-2 pt-3">
+                                    <a href="#" className="flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-black bg-white">
+                                        Download Resume
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        // --- 4. Hero Section ---
+        const Hero = () => {
+            const containerRef = useRef(null);
+
+            useLayoutEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.from(".hero-line", {
+                        y: 100,
+                        opacity: 0,
+                        duration: 1.5,
+                        stagger: 0.15,
+                        ease: "power4.out",
+                        delay: 0.2
+                    });
+                }, containerRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section ref={containerRef} className="min-h-screen flex flex-col justify-center px-6 max-w-7xl mx-auto pt-24">
+                    <div className="space-y-2 relative z-10">
+                        <div className="flex items-center gap-3 mb-6 hero-line">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span className="text-xs font-mono uppercase tracking-widest text-emerald-500">Available for Hire</span>
+                        </div>
+                        <h1 className="hero-line text-[clamp(3rem,8vw,7rem)] font-semibold text-white tracking-tighter leading-[0.95]">
+                            Predicting the <br/>
+                            <span className="text-zinc-600">Unseen.</span>
+                        </h1>
+                        <p className="hero-line text-lg md:text-xl text-zinc-400 font-light max-w-xl mt-8 leading-relaxed">
+                            AI Engineer & Data Scientist specializing in turning raw unstructured data into <span className="text-white font-medium">actionable intelligence</span>.
+                        </p>
+                    </div>
+
+                    <div className="hero-line flex flex-wrap gap-4 mt-12">
+                        {['Python', 'Prophet', 'PySpark', 'SAP4HANA', 'AWS'].map((tech) => (
+                            <span key={tech} className="px-3 py-1 rounded-full border border-zinc-800 text-xs font-mono text-zinc-500 bg-zinc-900/50">
+                                {tech}
+                            </span>
+                        ))}
+                    </div>
+                </section>
+            );
+        };
+
+        // --- 5. About / Core Competencies ---
+        const CoreCompetencies = () => {
+            const competencies = [
+                {
+                    title: "Data Science & Analytics",
+                    skills: "Predictive modeling, Artificial Intelligence, Clustering, Classification, Simulations."
+                },
+                {
+                    title: "Programming",
+                    skills: "Python (pandas, NumPy, scikit-learn, Stats models), SQL, R."
+                },
+                {
+                    title: "Machine Learning",
+                    skills: "Linear regression, Logistic regression, Decision trees, Random forests, ARIMA, Prophet."
+                },
+                {
+                    title: "Big Data & Cloud",
+                    skills: "AWS SageMaker, Google BigQuery, pySpark, Microsoft Azure, SAP4HANA."
+                },
+                {
+                    title: "Data Visualization",
+                    skills: "Tableau, Power BI, Matplotlib, Seaborn."
+                },
+                {
+                    title: "Other Skills",
+                    skills: "Feature engineering, EDA, Statistical sampling, Survey design, Model deployment, ETL."
+                }
+            ];
+
+            return (
+                <section id="about" className="py-24 bg-zinc-900/20 border-y border-white/5">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-12">Core Competencies</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {competencies.map((comp, i) => (
+                                <div key={i} className="group interactive p-6 border border-zinc-800 hover:border-zinc-600 rounded-xl bg-zinc-950/50 transition-colors h-full flex flex-col">
+                                    <h4 className="text-lg text-white font-medium tracking-tight mb-3 group-hover:text-zinc-200 transition-colors">
+                                        {comp.title}
+                                    </h4>
+                                    <p className="text-sm text-zinc-400 font-light leading-relaxed">
+                                        {comp.skills}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // --- 6. Data Engineering Stack Section ---
+        const StackSection = () => {
+             const stackItems = [
+                { name: "AWS SageMaker", type: "ML Ops" },
+                { name: "Google BigQuery", type: "Warehousing" },
+                { name: "Apache PySpark", type: "Processing" },
+                { name: "Microsoft Azure", type: "Cloud" },
+                { name: "SAP4HANA", type: "Enterprise DB" },
+                { name: "ETL Processing", type: "Pipeline" }
+            ];
+
+            return (
+                <section id="stack" className="py-24 px-6 max-w-7xl mx-auto border-b border-white/5">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                        <div>
+                            <h2 className="text-3xl md:text-4xl text-white font-medium tracking-tight mb-2">Data Engineering Stack</h2>
+                            <p className="text-zinc-400 text-sm max-w-md">Scalable infrastructure and processing pipelines utilized for deploying enterprise-grade models.</p>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {stackItems.map((item, idx) => (
+                            <div key={idx} className="interactive p-4 border border-zinc-800 bg-zinc-900/20 rounded-lg hover:bg-zinc-800/40 transition-colors flex flex-col justify-between h-28">
+                                <div className="text-white opacity-80">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-mono uppercase text-zinc-500 mb-1">{item.type}</div>
+                                    <div className="text-sm font-medium text-zinc-200">{item.name}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            );
+        }
+
+        // --- 7. Projects Section ---
+        const ProjectCard = ({ title, desc, tags, year }) => (
+            <div className="interactive group relative border-t border-zinc-800/60 py-12 hover:bg-zinc-900/30 transition-all duration-500">
+                <div className="flex flex-col md:flex-row gap-8 justify-between md:items-start relative z-10 px-4 md:px-0">
+                    <div className="md:w-1/3">
+                        <h3 className="text-2xl text-zinc-100 font-medium tracking-tight mb-2 group-hover:translate-x-2 transition-transform duration-300">{title}</h3>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                            {tags.map(tag => (
+                                <span key={tag} className="text-[10px] font-mono uppercase text-zinc-500 border border-zinc-800 px-2 py-0.5 rounded-md">{tag}</span>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="md:w-1/2">
+                        <p className="text-zinc-400 font-light leading-relaxed text-sm md:text-base">{desc}</p>
+                    </div>
+                    <div className="md:w-auto text-right">
+                         <span className="text-xs font-mono text-zinc-600 group-hover:text-white transition-colors">{year}</span>
+                         <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="ml-auto text-white"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Projects = () => {
+            const projects = [
+                {
+                    title: "Customer Segmentation",
+                    desc: "Developed a clustering model for retail clients using K-Means, improving campaign targeting and ensuring consistent route delivery of goods.",
+                    tags: ["K-Means", "Clustering", "Python", "Retail"],
+                    year: "2024"
+                },
+                {
+                    title: "Sales Forecasting",
+                    desc: "Created a time-series forecasting model using ARIMA and Prophet to predict future sales trends with high accuracy.",
+                    tags: ["ARIMA", "Prophet", "Time-Series", "Analytics"],
+                    year: "2023"
+                },
+                {
+                    title: "Churn Predictor",
+                    desc: "End-to-end customer retention system using XGBoost and Random Forest ensembles. Integrated with Salesforce API to flag at-risk accounts in real-time.",
+                    tags: ["XGBoost", "Random Forest", "API"],
+                    year: "2023"
+                },
+                {
+                    title: "Musician Social Network",
+                    desc: "Graph-based social network model for a Kenyan musician to analyze fanbase connectivity, influence propagation, and community detection.",
+                    tags: ["Social Network Analysis", "Graph Theory", "Data Mining"],
+                    year: "2023"
+                }
+            ];
+
+            return (
+                <section id="projects" className="py-24 px-6 max-w-7xl mx-auto">
+                    <div className="flex items-end justify-between mb-16 border-b border-zinc-800 pb-6">
+                        <h2 className="text-3xl md:text-4xl text-white font-medium tracking-tight">Selected Work</h2>
+                        <span className="hidden md:inline-block text-xs font-mono text-zinc-500 uppercase tracking-widest">Case Studies 01—04</span>
+                    </div>
+                    <div className="flex flex-col">
+                        {projects.map((p, i) => <ProjectCard key={i} {...p} />)}
+                    </div>
+                </section>
+            );
+        };
+
+        // --- 8. Footer ---
+        const Footer = () => (
+            <footer id="contact" className="py-24 px-6 max-w-7xl mx-auto relative overflow-hidden">
+                <div className="flex flex-col items-center justify-center text-center">
+                    <h2 className="text-5xl md:text-7xl font-semibold tracking-tighter text-white mb-8">
+                        Ready to <span className="text-zinc-600">Collaborate?</span>
+                    </h2>
+                    <a href="mailto:jordan@example.com" className="interactive inline-flex items-center gap-2 px-8 py-4 bg-white text-zinc-950 rounded-full font-medium text-sm hover:scale-105 transition-transform duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        Get in Touch
+                    </a>
+
+                    <div className="flex items-center gap-6 mt-16">
+                         {[
+                            { icon: "lucide:github", href: "#" },
+                            { icon: "lucide:linkedin", href: "#" },
+                            { icon: "lucide:twitter", href: "#" },
+                            { icon: "lucide:dribbble", href: "#" }
+                        ].map((social, i) => (
+                            <a key={i} href={social.href} className="interactive text-zinc-500 hover:text-white transition-colors p-2 border border-transparent hover:border-zinc-800 rounded-full">
+                                <iconify-icon icon={social.icon} width="20" height="20" stroke-width="1.5"></iconify-icon>
+                            </a>
+                        ))}
+                    </div>
+                    
+                    <div className="mt-24 w-full flex justify-between items-center text-[10px] text-zinc-600 font-mono uppercase tracking-widest border-t border-zinc-900 pt-8">
+                        <span>© 2024 Jeremy Nyende</span>
+                        <span>Built with React & Three.js</span>
+                    </div>
+                </div>
+            </footer>
+        );
+
+        const App = () => {
+            return (
+                <div className="relative">
+                    <CustomCursor />
+                    <Scene />
+                    <Header />
+                    <main className="relative z-10">
+                        <Hero />
+                        <CoreCompetencies />
+                        <StackSection />
+                        <Projects />
+                        <Footer />
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+</body></html>

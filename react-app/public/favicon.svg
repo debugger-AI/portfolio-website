@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Dark background matching site theme -->
+  <rect width="64" height="64" fill="#18181b" rx="10"/>
+  
+  <!-- Subtle grid pattern representing data structure -->
+  <defs>
+    <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#71717a" stroke-width="0.3" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="64" height="64" fill="url(#grid)"/>
+  
+  <!-- JN Monogram - matching header style with modern look -->
+  <circle cx="32" cy="32" r="20" fill="#ffffff"/>
+  <text x="32" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="#18181b" text-anchor="middle" letter-spacing="-1.5">JN</text>
+  
+  <!-- Particle dots representing 3D scene theme -->
+  <circle cx="10" cy="10" r="1.2" fill="#d4d4d8" opacity="0.7"/>
+  <circle cx="54" cy="10" r="1.2" fill="#d4d4d8" opacity="0.7"/>
+  <circle cx="10" cy="54" r="1.2" fill="#d4d4d8" opacity="0.7"/>
+  <circle cx="54" cy="54" r="1.2" fill="#d4d4d8" opacity="0.7"/>
+  
+  <!-- Subtle corner accent -->
+  <path d="M 0 0 L 12 0 L 0 12 Z" fill="#71717a" opacity="0.15"/>
+  <path d="M 64 64 L 52 64 L 64 52 Z" fill="#71717a" opacity="0.15"/>
+</svg>
+
