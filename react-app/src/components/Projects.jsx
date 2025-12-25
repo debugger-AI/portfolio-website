@@ -5,30 +5,34 @@ const projects = [
         title: 'Customer Segmentation',
         desc: 'Developed a clustering model for retail clients using K-Means, improving campaign targeting and ensuring consistent route delivery of goods.',
         tags: ['K-Means', 'Clustering', 'Python', 'Retail'],
-        year: '2024'
+        year: '2024',
+        githubLink: 'https://github.com/debugger-AI'
     },
     {
         title: 'Sales Forecasting',
         desc: 'Created a time-series forecasting model using ARIMA and Prophet to predict future sales trends with high accuracy.',
         tags: ['ARIMA', 'Prophet', 'Time-Series', 'Analytics'],
-        year: '2023'
+        year: '2023',
+        githubLink: 'https://github.com/debugger-AI'
     },
     {
         title: 'Churn Predictor',
         desc: 'End-to-end customer retention system using XGBoost and Random Forest ensembles. Integrated with Salesforce API to flag at-risk accounts in real-time.',
         tags: ['XGBoost', 'Random Forest', 'API'],
-        year: '2023'
+        year: '2023',
+        githubLink: 'https://github.com/debugger-AI'
     },
     {
         title: 'Musician Social Network',
         desc: 'Graph-based social network model for a Kenyan musician to analyze fanbase connectivity, influence propagation, and community detection.',
         tags: ['Social Network Analysis', 'Graph Theory', 'Data Mining'],
         year: '2023',
+        githubLink: 'https://github.com/debugger-AI',
         link: 'https://www.kaggle.com/datasets/jerenyende/kenyan-artist-for-graph-analysis'
     }
 ];
 
-const ProjectCard = ({ title, desc, tags, year, link }) => {
+const ProjectCard = ({ title, desc, tags, year, link, githubLink }) => {
     const content = (
         <div className="flex flex-col md:flex-row gap-8 justify-between md:items-start relative z-10 px-4 md:px-0">
             <div className="md:w-1/3">
@@ -44,17 +48,34 @@ const ProjectCard = ({ title, desc, tags, year, link }) => {
             </div>
             <div className="md:w-auto text-right">
                 <span className="text-xs font-mono text-zinc-600 group-hover:text-white transition-colors">{year}</span>
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="ml-auto text-white"><path d="M7 17L17 7" /><polyline points="7 7 17 7 17 17" /></svg>
+                <div className="mt-4 flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {githubLink && (
+                        <a 
+                            href={githubLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-white hover:text-zinc-300 transition-colors"
+                            title="View on GitHub"
+                        >
+                            <iconify-icon icon="lucide:github" width="20" height="20" />
+                        </a>
+                    )}
+                    {link && (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M7 17L17 7" /><polyline points="7 7 17 7 17 17" /></svg>
+                    )}
                 </div>
             </div>
         </div>
     );
 
-    if (link) {
+    // Use GitHub link as primary, fallback to external link
+    const primaryLink = githubLink || link;
+
+    if (primaryLink) {
         return (
             <a 
-                href={link} 
+                href={primaryLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="interactive group relative border-t border-zinc-800/60 py-12 hover:bg-zinc-900/30 transition-all duration-500 block cursor-pointer"
