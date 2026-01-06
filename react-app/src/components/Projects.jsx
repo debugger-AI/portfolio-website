@@ -2,6 +2,13 @@ import React from 'react';
 
 const projects = [
     {
+        title: 'Sleep Scoring Model',
+        desc: 'Developed a sleep scoring model to rank sleep quality based on various physiological and environmental factors.',
+        tags: ['Machine Learning', 'Classification', 'Python'],
+        year: '2025',
+        githubLink: 'https://github.com/debugger-AI/Sleep'
+    },
+    {
         title: 'Customer Segmentation',
         desc: 'Developed a clustering model for retail clients using K-Means, improving campaign targeting and ensuring consistent route delivery of goods.',
         tags: ['K-Means', 'Clustering', 'Python', 'Retail'],
