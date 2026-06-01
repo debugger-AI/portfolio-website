@@ -2,40 +2,39 @@ import React from 'react';
 
 const projects = [
     {
-        title: 'Sleep Scoring Model',
-        desc: 'Developed a sleep scoring model to rank sleep quality based on various physiological and environmental factors.',
-        tags: ['Machine Learning', 'Classification', 'Python'],
+        title: 'Jali AI — CHW Health Toolkit',
+        desc: 'An offline-first health application empowering Community Health Workers with clinical decision support, RAG/LLM-powered diagnostics, and a Snowflake + Airflow data pipeline for real-time community health insights.',
+        tags: ['RAG/LLM', 'Snowflake', 'Airflow', 'PouchDB', 'React', 'Data Engineering'],
         year: '2025',
-        githubLink: 'https://github.com/debugger-AI/Sleep'
+        githubLink: 'https://github.com/debugger-AI/jali_AI'
     },
     {
         title: 'Customer Segmentation',
-        desc: 'Developed a clustering model for retail clients using K-Means, improving campaign targeting and ensuring consistent route delivery of goods.',
+        desc: 'Developed a clustering model for retail clients using K-Means, improving campaign targeting and ensuring consistent route delivery of goods at Tolaram East Africa Limited.',
         tags: ['K-Means', 'Clustering', 'Python', 'Retail'],
+        year: '2025',
+        githubLink: 'https://github.com/debugger-AI'
+    },
+    {
+        title: 'Sales & MRP Forecasting',
+        desc: 'Created a time-series forecasting model using ARIMA and Prophet to predict sales trends. Optimized raw material usage estimates for production allocation.',
+        tags: ['ARIMA', 'Prophet', 'Time-Series', 'SQL'],
+        year: '2025',
+        githubLink: 'https://github.com/debugger-AI'
+    },
+    {
+        title: 'Financial Data Pipelines',
+        desc: 'Built Python-based data cleaning pipelines and Power BI dashboards to track portfolio performance and improve financial dataset accuracy for Jubilee Insurance.',
+        tags: ['Python', 'Power BI', 'Data Pipelines', 'Finance'],
         year: '2024',
         githubLink: 'https://github.com/debugger-AI'
     },
     {
-        title: 'Sales Forecasting',
-        desc: 'Created a time-series forecasting model using ARIMA and Prophet to predict future sales trends with high accuracy.',
-        tags: ['ARIMA', 'Prophet', 'Time-Series', 'Analytics'],
-        year: '2023',
+        title: 'Operational Data Mining',
+        desc: 'Conducted online data mining and created interactive dashboards using Power BI and Excel for Beacon of Hope to support organizational decision-making.',
+        tags: ['Data Mining', 'Power BI', 'Excel', 'Analytics'],
+        year: '2022',
         githubLink: 'https://github.com/debugger-AI'
-    },
-    {
-        title: 'Churn Predictor',
-        desc: 'End-to-end customer retention system using XGBoost and Random Forest ensembles. Integrated with Salesforce API to flag at-risk accounts in real-time.',
-        tags: ['XGBoost', 'Random Forest', 'API'],
-        year: '2023',
-        githubLink: 'https://github.com/debugger-AI'
-    },
-    {
-        title: 'Musician Social Network',
-        desc: 'Graph-based social network model for a Kenyan musician to analyze fanbase connectivity, influence propagation, and community detection.',
-        tags: ['Social Network Analysis', 'Graph Theory', 'Data Mining'],
-        year: '2023',
-        githubLink: 'https://github.com/debugger-AI',
-        link: 'https://www.kaggle.com/datasets/jerenyende/kenyan-artist-for-graph-analysis'
     }
 ];
 
@@ -57,9 +56,9 @@ const ProjectCard = ({ title, desc, tags, year, link, githubLink }) => {
                 <span className="text-xs font-mono text-zinc-600 group-hover:text-white transition-colors">{year}</span>
                 <div className="mt-4 flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     {githubLink && (
-                        <a 
-                            href={githubLink} 
-                            target="_blank" 
+                        <a
+                            href={githubLink}
+                            target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             className="text-white hover:text-zinc-300 transition-colors"
@@ -81,9 +80,9 @@ const ProjectCard = ({ title, desc, tags, year, link, githubLink }) => {
 
     if (primaryLink) {
         return (
-            <a 
-                href={primaryLink} 
-                target="_blank" 
+            <a
+                href={primaryLink}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="interactive group relative border-t border-zinc-800/60 py-12 hover:bg-zinc-900/30 transition-all duration-500 block cursor-pointer"
             >
@@ -103,7 +102,7 @@ const Projects = () => (
     <section id="projects" className="py-24 px-6 max-w-7xl mx-auto">
         <div className="flex items-end justify-between mb-16 border-b border-zinc-800 pb-6">
             <h2 className="text-3xl md:text-4xl text-white font-medium tracking-tight">Selected Work</h2>
-            <span className="hidden md:inline-block text-xs font-mono text-zinc-500 uppercase tracking-widest">Case Studies 01—04</span>
+            <span className="hidden md:inline-block text-xs font-mono text-zinc-500 uppercase tracking-widest">Case Studies 01—05</span>
         </div>
         <div className="flex flex-col">
             {projects.map((p, i) => (
